@@ -1,0 +1,163 @@
+library(openxlsx)
+library(xts)
+
+dane <- read.xlsx("zbior danych.xlsx")
+
+dane <- dane[3:nrow(dane), ]
+
+names(dane) <- c("Data", "zmiana_cen_wzrosly_znacznie", "zmiana_cen_wzrosly_umiarkowanie", "zmiana_cen_wzrosly_nieznacznie",
+                 "zmiana_cen_poz_mn_wi_takie_same", "zmiana_cen_spadly", "zmiana_cen_nie_wiem", "przew_zmiana_cen_nast_szyb_wzr", 
+                 "przew_zmiana_cen_nast_wzr_w_pod_tempie", "przew_zmiana_cen_beda_wzr_wolniej", "przew_zmiana_cen_mn_wi_na_tak_sam_poz",
+                 "przew_zmiana_cen_nast_spadek", "przew_zmiana_cen_nie_wiem", "faktyczna_inflacja_wedlug_GUSu")
+
+
+dane[, 1] <- as.Date(dane[, 1], origin = "1899-12-30")
+
+for(i in 2:ncol(dane))
+{
+  dane[, i] <- as.double(dane[, i])
+}
+
+dane <- xts(dane[, -1], order.by = dane[, 1])
+
+# View(dane)
+
+# X11(); plot(dane[, 1:5], legend.loc = T)
+
+
+dane_oczek <- dane[, 7:12]
+
+dane_percep <- dane[, 1:6]
+
+bs_1t_e <- dane_oczek[, 1] + dane_oczek[, 2] + dane_oczek[, 3] - dane_oczek[, 5]
+
+# X11(); plot(bs_1t_e)
+
+bs_1_p <- dane_percep[, 1] + dane_percep[, 2] + dane_percep[, 3] - dane_percep[, 5]
+
+# X11(); plot(bs_1_p)
+
+
+
+
+
+
+
+bs_2t_e <- dane_oczek[, 1] + dane_oczek[, 2] + dane_oczek[, 3] - dane_oczek[, 4] - dane_oczek[, 5]
+
+# X11(); plot(bs_2t_e)
+
+bs_2t_p <- dane_percep[, 1] + dane_percep[, 2] + dane_percep[, 3] - dane_percep[, 4] - dane_percep[, 5]
+
+# X11(); plot(bs_2t_p)
+
+
+
+
+
+
+
+bs_3t_e <- dane_oczek[, 1] + 0.5 * dane_oczek[, 2] - 0.5 * dane_oczek[, 4] - dane_oczek[, 5]
+
+bs_3_p <- dane_percep[, 1] + 0.5 * dane_percep[, 2] - 0.5 * dane_percep[, 4] - dane_percep[, 5]
+
+
+
+
+
+
+
+
+bs_4t_e <- 3 * dane_oczek[, 1] + 2 * dane_oczek[, 2] + dane_oczek[, 3] - dane_oczek[, 5]
+
+bs_4t_p <- 3 * dane_percep[, 1] + 2 * dane_percep[, 2] + dane_percep[, 3] - dane_percep[, 5]
+
+
+
+
+
+
+
+
+a1 <- dane_oczek[, 1] / (dane_oczek[, 1] + dane_oczek[, 2] + dane_oczek[, 3] + dane_oczek[, 4] + dane_oczek[, 5])
+
+a2 <- dane_oczek[, 2] / (dane_oczek[, 1] + dane_oczek[, 2] + dane_oczek[, 3] + dane_oczek[, 4] + dane_oczek[, 5])
+
+a3 <- dane_oczek[, 3] / (dane_oczek[, 1] + dane_oczek[, 2] + dane_oczek[, 3] + dane_oczek[, 4] + dane_oczek[, 5])
+
+b <- dane_oczek[, 4] / (dane_oczek[, 1] + dane_oczek[, 2] + dane_oczek[, 3] + dane_oczek[, 4] + dane_oczek[, 5])
+
+c <- dane_oczek[, 5] / (dane_oczek[, 1] + dane_oczek[, 2] + dane_oczek[, 3] + dane_oczek[, 4] + dane_oczek[, 5])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+a1p <- dane_percep[, 1] / (dane_percep[, 1] + dane_percep[, 2] + dane_percep[, 3] + dane_percep[, 4] + dane_percep[, 5])
+
+a2p <- dane_percep[, 2] / (dane_percep[, 1] + dane_percep[, 2] + dane_percep[, 3] + dane_percep[, 4] + dane_percep[, 5])
+
+a3p <- dane_percep[, 3] / (dane_percep[, 1] + dane_percep[, 2] + dane_percep[, 3] + dane_percep[, 4] + dane_percep[, 5])
+
+bp <- dane_percep[, 4] / (dane_percep[, 1] + dane_percep[, 2] + dane_percep[, 3] + dane_percep[, 4] + dane_percep[, 5])
+
+cp <- dane_percep[, 5] / (dane_percep[, 1] + dane_percep[, 2] + dane_percep[, 3] + dane_percep[, 4] + dane_percep[, 5])
+
+
+
+
+
+
+# Za percepcje inflacji przyjmuje oficjalna inflacje.
+
+pi_0_t <- dane[, 13]
+
+n <- nrow(dane)
+
+
+theta_1 <- sqrt(n / (n - 2))
+
+
+A_1t_T <- qt(1 - a1, n)
+
+A_2t_T <- qt(1 - a1 - a2, n)
+
+A_3t_T <- qt(1 - a1 - a2 - a3, n)
+
+B_t_T <- qt(c + 10^(-10), n)
+
+
+
+pi_t_e_z_kreska <- pi_0_t * (-A_3t_T - B_t_T) / (A_1t_T + A_2t_T - A_3t_T - B_t_T)
+
+sigma_t <- -2 * theta_1 * pi_0_t / (A_1t_T + A_2t_T - A_3t_T - B_t_T)
+
+
+
+
+
+
+
+
+
+
+
+parametry <- data.frame("Data" = index(pi_t_e_z_kreska), "pi_t_e_z_kreska" = as.double(pi_t_e_z_kreska), "sigma_t" = as.double(sigma_t))
+
+
+
+# write.xlsx(parametry, "t_student.xlsx")
+
+xts_parametry <- xts(parametry[, -1], order.by = parametry[, 1])
+
+# X11(); plot(xts_parametry, legend.loc = T)
+
